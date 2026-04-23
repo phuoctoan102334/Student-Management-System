@@ -1,0 +1,8 @@
+Caused by: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+        at java.base/sun.security.provider.certpath.SunCertPathBuilder.build(SunCertPathBuilder.java:148) ~[na:na]
+        at java.base/sun.security.provider.certpath.SunCertPathBuilder.engineBuild(SunCertPathBuilder.java:129) ~[na:na]
+        at java.base/java.security.cert.CertPathBuilder.build(CertPathBuilder.java:299) ~[na:na]
+        at java.base/sun.security.validator.PKIXValidator.doBuild(PKIXValidator.java:382) ~[na:na]
+        ... 69 common frames omitted
+
+2026-04-23T08:20:34.681+07:00  WARN 11012 --- [studentmanager] [           main] org.hibernate.orm.deprecation            : HHH90000025: SQLServerDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default

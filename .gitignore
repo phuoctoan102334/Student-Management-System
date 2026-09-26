@@ -31,3 +31,21 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Backup (luat.md muc 1) ###
+.backup/
+
+### Reference copy (nested git repo + .env rieng, khong push) ###
+giuaky_thinh/
+
+### Secrets - KHONG commit ###
+.env
+*.env
+!*.env.example
+
+### OS / misc ###
+.DS_Store
+
+### Node (frontend tooling) ###
+node_modules/
+dist/

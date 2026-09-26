@@ -1,0 +1,77 @@
+# ===================================================================
+# docker-compose.yml - khởi động đủ 3 phần: DB, Backend, Frontend
+#
+#   docker compose up -d --build   -> chạy
+#   docker compose ps              -> xem trạng thái
+#   docker compose logs -f         -> xem log
+#   docker compose down            -> dừng
+#   docker compose down -v         -> dừng + xoá dữ liệu DB
+#
+# Biến môi trường đọc tự động từ file .env ở cùng thư mục.
+# ===================================================================
+
+services:
+  # ---------- 1. DATABASE (Postgres 16 + init.sql nhúng trong image) ----------
+  db:
+    image: danhtai123/giuaky-db:latest
+    build: ./db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # giữ dữ liệu qua lần restart
+    ports:
+      - "${DB_PORT:-55432}:5432"          # truy cập từ host (psql, DBeaver...)
+    # pg_isready chạy TRONG container nên dùng biến của container ($$ để tránh
+    # docker compose đọc thay mình)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # ---------- 2. BACKEND (Express + pg) ----------
+  backend:
+    image: danhtai123/giuaky-backend:latest
+    build: ./backend
+    environment:
+      PORT: "3000"
+      DB_HOST: db            # tên service trên mạng compose, KHÔNG phải localhost
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy   # chỉ start khi DB đã sẵn sàng nhận kết nối
+    expose:
+      - "3000"                        # chỉ nội bộ network compose, không mở host
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
+
+  # ---------- 3. FRONTEND (nginx serve file build React + proxy /api) ----------
+  frontend:
+    image: danhtai123/giuaky-frontend:latest
+    build: ./frontend
+    ports:
+      - "${WEB_PORT:-8080}:80"         # mở ra host theo WEB_PORT trong .env
+    depends_on:
+      backend:
+        condition: service_healthy     # nginx chỉ start khi backend đã chạy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

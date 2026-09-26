@@ -36,7 +36,7 @@ build/
 .backup/
 
 ### Reference copy (nested git repo + .env rieng, khong push) ###
-giuaky_thinh/
+giuaky_toan/
 
 ### Secrets - KHONG commit ###
 .env
